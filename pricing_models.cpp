@@ -181,6 +181,23 @@ double double_no_touch_option(const Model& model)
     return payoff;
 }
 
+// ForwardRateAgreement.1
+TimeSlice forward_rate_agreement(const Model& model)
+{
+    double n = 100000.0;
+    int start_step = 50;
+    int end_step = 50;
+    int side = 1;
+    double f = 0.05;
+    double dcf = 0.25;
+
+    TimeSlice s = model.get_const_time_slice(start_step, 0.0);
+    TimeSlice e = model.get_const_time_slice(end_step, 0.0);
+    e.discounted_rollback(start_step);
+    TimeSlice p = s - e * (1 + dcf * f);
+    return (side * n) * p;
+}
+
 int main()
 {
     int step_count = 100;
@@ -189,9 +206,11 @@ int main()
     Model model;
     
     european_vanilla_option(model);
+    american_vanilla_option(model);
     asian_option(model);
     lookback_option(model);
     fade_in_option(model);
     one_touch_option(model);
     double_no_touch_option(model);
+    forward_rate_agreement(model);
 }
