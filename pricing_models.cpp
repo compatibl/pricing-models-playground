@@ -18,7 +18,7 @@
 class TimeSlice
 {
 public:
-    TimeSlice discounted_rollback(int step) const { return TimeSlice(); }
+    void discounted_rollback(int step) {}
 };
 
 TimeSlice max(const TimeSlice& s1, const TimeSlice& s2) { return TimeSlice(); }
@@ -31,6 +31,9 @@ TimeSlice operator+(const TimeSlice& s1, double s2) { return TimeSlice(); }
 TimeSlice operator-(const TimeSlice& s1, const TimeSlice& s2) { return TimeSlice(); }
 TimeSlice operator-(double s1, const TimeSlice& s2) { return TimeSlice(); }
 TimeSlice operator-(const TimeSlice& s1, double s2) { return TimeSlice(); }
+TimeSlice operator*(const TimeSlice& s1, const TimeSlice& s2) { return TimeSlice(); }
+TimeSlice operator*(double s1, const TimeSlice& s2) { return TimeSlice(); }
+TimeSlice operator*(const TimeSlice& s1, double s2) { return TimeSlice(); }
 
 class Model
 {
@@ -65,16 +68,15 @@ TimeSlice american_vanilla_option(const Model& model)
     int side = 1;
     double s = 1.5;
 
-    TimeSlice u = model.get_underlying_time_slice(expiry_step);
-    TimeSlice option = max(s - u, 0.0);
-    for (int i = 0; i < expiry_step; ++i)
+    TimeSlice option = model.get_const_time_slice(expiry_step, 0.0);
+    for (int i = expiry_step; i >= 0; --i)
     {
-        option = option.discounted_rollback(i);
         TimeSlice u = model.get_underlying_time_slice(expiry_step);
-        TimeSlice payoff = max(s - u, 0.0);
-        option = max(option, payoff);
+        TimeSlice payoff = s - u;
+        option = max(payoff, option);
+        option.discounted_rollback(i);
     }
-    return option;
+    return side * notl * option;
 }
 
 // AsianOption.1
