@@ -50,20 +50,20 @@ public:
 // EuropeanVanillaOption.1
 double european_vanilla_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = 1;
     double s = 1.5;
 
     std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    double payoff = side * notl * std::max(s - underlying[expiry_step], 0.0);
+    double payoff = side * n * std::max(s - underlying[expiry_step], 0.0);
     return payoff;
 }
 
 // AmericanVanillaOption.1
 TimeSlice american_vanilla_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = 1;
     double s = 1.5;
@@ -76,13 +76,13 @@ TimeSlice american_vanilla_option(const Model& model)
         option = max(payoff, option);
         option.discounted_rollback(i);
     }
-    return side * notl * option;
+    return side * n * option;
 }
 
 // AsianOption.1
 double asian_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = -1;
     double s = 1.5;
@@ -95,14 +95,14 @@ double asian_option(const Model& model)
     }
     avg /= expiry_step;
 
-    double payoff = side * notl * std::max(avg - s, 0.0);
+    double payoff = side * n * std::max(avg - s, 0.0);
     return payoff;
 }
 
 // LookbackOption.1
 double lookback_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = 1;
     double s = 1.5;
@@ -115,14 +115,14 @@ double lookback_option(const Model& model)
         if (u > m) u = m;
     }
 
-    double payoff = side * notl * std::max(m - s, 0.0);
+    double payoff = side * n * std::max(m - s, 0.0);
     return payoff;
 }
 
 // FadeInOption
 double fade_in_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = 1;
     double s = 1.5;
@@ -137,14 +137,14 @@ double fade_in_option(const Model& model)
     }
     mult /= expiry_step;
 
-    double payoff = side * mult * notl * std::max(underlying[expiry_step] - s, 0.0);
+    double payoff = side * mult * n * std::max(underlying[expiry_step] - s, 0.0);
     return payoff;
 }
 
 // OneTouchOption.1
 double one_touch_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = -1;
     double b = 1.5;
@@ -156,14 +156,14 @@ double one_touch_option(const Model& model)
         double u = underlying[i];
         if (u >= b) alive = 0;
     }
-    double payoff = side * notl * alive;
+    double payoff = side * n * alive;
     return payoff;
 }
 
 // DoubleNoTouchOption.1
 double double_no_touch_option(const Model& model)
 {
-    double notl = 100000.0;
+    double n = 100000.0;
     int expiry_step = 50;
     int side = -1;
     double b1 = 1.3;
@@ -177,7 +177,7 @@ double double_no_touch_option(const Model& model)
         if (u <= b1) alive = 0;
         if (u >= b2) alive = 0;
     }
-    double payoff = side * notl * alive;
+    double payoff = side * n * alive;
     return payoff;
 }
 
