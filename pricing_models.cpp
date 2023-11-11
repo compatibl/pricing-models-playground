@@ -16,19 +16,19 @@
 #include <vector>
 
 // European Vanilla Option
-double european_vanilla_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+double european_vanilla_option(const std::vector<double>& underlying)
 {
     double notl = 100000.0;
     int expiry_step = 50;
     int side = 1;
     double s = 1.5;
 
-    double discounted_payoff = side * notl * std::max(s - underlying[expiry_step], 0.0) * sdf[expiry_step];
+    double discounted_payoff = side * notl * std::max(s - underlying[expiry_step], 0.0);
     return discounted_payoff;
 }
 
 // Asian Option
-double asian_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+double asian_option(const std::vector<double>& underlying)
 {
     double notl = 100000.0;
     int expiry_step = 50;
@@ -42,12 +42,12 @@ double asian_option(const std::vector<double>& sdf, const std::vector<double>& u
     }
     avg /= expiry_step;
 
-    double discounted_payoff = side * notl * std::max(avg - s, 0.0) * sdf[expiry_step];
+    double discounted_payoff = side * notl * std::max(avg - s, 0.0);
     return discounted_payoff;
 }
 
 // Lookback Option
-double lookback_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+double lookback_option(const std::vector<double>& underlying)
 {
     double notl = 100000.0;
     int expiry_step = 50;
@@ -61,12 +61,12 @@ double lookback_option(const std::vector<double>& sdf, const std::vector<double>
         if (u > max_underlying) u = max_underlying;
     }
 
-    double discounted_payoff = side * notl * std::max(max_underlying - s, 0.0) * sdf[expiry_step];
+    double discounted_payoff = side * notl * std::max(max_underlying - s, 0.0);
     return discounted_payoff;
 }
 
 // Fade-In Option
-double fade_in_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+double fade_in_option(const std::vector<double>& underlying)
 {
     double notl = 100000.0;
     int expiry_step = 50;
@@ -82,12 +82,12 @@ double fade_in_option(const std::vector<double>& sdf, const std::vector<double>&
     }
     mult /= expiry_step;
 
-    double discounted_payoff = side * mult * notl * std::max(underlying[expiry_step] - s, 0.0) * sdf[expiry_step];
+    double discounted_payoff = side * mult * notl * std::max(underlying[expiry_step] - s, 0.0);
     return discounted_payoff;
 }
 
 // One-Touch Option
-double one_touch_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+double one_touch_option(const std::vector<double>& underlying)
 {
     double notl = 100000.0;
     int expiry_step = 50;
@@ -100,12 +100,12 @@ double one_touch_option(const std::vector<double>& sdf, const std::vector<double
         double u = underlying[i];
         if (u >= b) alive = 0;
     }
-    double discounted_payoff = side * notl * alive * sdf[expiry_step];
+    double discounted_payoff = side * notl * alive;
     return discounted_payoff;
 }
 
 // Double No-Touch Option
-double double_no_touch_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+double double_no_touch_option(const std::vector<double>& underlying)
 {
     double notl = 100000.0;
     int expiry_step = 50;
@@ -120,22 +120,21 @@ double double_no_touch_option(const std::vector<double>& sdf, const std::vector<
         if (u <= b1) alive = 0;
         if (u >= b2) alive = 0;
     }
-    double discounted_payoff = side * notl * alive * sdf[expiry_step];
+    double discounted_payoff = side * notl * alive;
     return discounted_payoff;
 }
 
 int main()
 {
     int step_count = 100;
-    std::vector<double> sdf(step_count, 1.0);
     std::vector<double> fx_rate(step_count, 1.5);
     
     {
-        european_vanilla_option(sdf, fx_rate);
-        asian_option(sdf, fx_rate);
-        lookback_option(sdf, fx_rate);
-        fade_in_option(sdf, fx_rate);
-        one_touch_option(sdf, fx_rate);
-        double_no_touch_option(sdf, fx_rate);
+        european_vanilla_option(fx_rate);
+        asian_option(fx_rate);
+        lookback_option(fx_rate);
+        fade_in_option(fx_rate);
+        one_touch_option(fx_rate);
+        double_no_touch_option(fx_rate);
     }
 }
