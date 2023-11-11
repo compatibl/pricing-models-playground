@@ -1,20 +1,141 @@
-// PricingModels.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// Copyright(C) 2023 - present The Project Contributors
 //
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <iostream>
+#include <vector>
+
+// European Vanilla Option
+double european_vanilla_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+{
+    double notl = 100000.0;
+    int expiry_step = 50;
+    int side = 1;
+    double s = 1.5;
+
+    double discounted_payoff = side * notl * std::max(s - underlying[expiry_step], 0.0) * sdf[expiry_step];
+    return discounted_payoff;
+}
+
+// Asian Option
+double asian_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+{
+    double notl = 100000.0;
+    int expiry_step = 50;
+    int side = 1;
+    double s = 1.5;
+
+    double avg = 0.0;
+    for (int i = 0; i < expiry_step; ++i)
+    {
+        avg += underlying[i];
+    }
+    avg /= expiry_step;
+
+    double discounted_payoff = side * notl * std::max(avg - s, 0.0) * sdf[expiry_step];
+    return discounted_payoff;
+}
+
+// Lookback Option
+double lookback_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+{
+    double notl = 100000.0;
+    int expiry_step = 50;
+    int side = 1;
+    double s = 1.5;
+
+    double max_underlying = underlying[0];
+    for (int i = 1; i < expiry_step; ++i)
+    {
+        double u = underlying[i];
+        if (u > max_underlying) u = max_underlying;
+    }
+
+    double discounted_payoff = side * notl * std::max(max_underlying - s, 0.0) * sdf[expiry_step];
+    return discounted_payoff;
+}
+
+// Fade-In Option
+double fade_in_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+{
+    double notl = 100000.0;
+    int expiry_step = 50;
+    int side = 1;
+    double s = 1.5;
+    double b = 1.5;
+
+    double mult = 0.0;
+    for (int i = 0; i < expiry_step; ++i)
+    {
+        double u = underlying[i];
+        if (u >= b) mult += 1.0;
+    }
+    mult /= expiry_step;
+
+    double discounted_payoff = side * mult * notl * std::max(underlying[expiry_step] - s, 0.0) * sdf[expiry_step];
+    return discounted_payoff;
+}
+
+// One-Touch Option
+double one_touch_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+{
+    double notl = 100000.0;
+    int expiry_step = 50;
+    int side = -1;
+    double b = 1.5;
+
+    int alive = 1;
+    for (int i = 0; i <= expiry_step; ++i)
+    {
+        double u = underlying[i];
+        if (u >= b) alive = 0;
+    }
+    double discounted_payoff = side * notl * alive * sdf[expiry_step];
+    return discounted_payoff;
+}
+
+// Double No-Touch Option
+double double_no_touch_option(const std::vector<double>& sdf, const std::vector<double>& underlying)
+{
+    double notl = 100000.0;
+    int expiry_step = 50;
+    int side = -1;
+    double b1 = 1.3;
+    double b2 = 1.5;
+
+    int alive = 1;
+    for (int i = 0; i <= expiry_step; ++i)
+    {
+        double u = underlying[i];
+        if (u <= b1) alive = 0;
+        if (u >= b2) alive = 0;
+    }
+    double discounted_payoff = side * notl * alive * sdf[expiry_step];
+    return discounted_payoff;
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    int step_count = 100;
+    std::vector<double> sdf(step_count, 1.0);
+    std::vector<double> fx_rate(step_count, 1.5);
+    
+    {
+        european_vanilla_option(sdf, fx_rate);
+        asian_option(sdf, fx_rate);
+        lookback_option(sdf, fx_rate);
+        fade_in_option(sdf, fx_rate);
+        one_touch_option(sdf, fx_rate);
+        double_no_touch_option(sdf, fx_rate);
+    }
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
