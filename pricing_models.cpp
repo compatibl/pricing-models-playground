@@ -15,6 +15,12 @@
 #include <iostream>
 #include <vector>
 
+class Date
+{
+public:
+    Date(int year, int month, int day_of_month) {}
+};
+
 class TimeSlice
 {
 public:
