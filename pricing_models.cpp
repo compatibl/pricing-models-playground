@@ -25,6 +25,7 @@ class TimeSlice
 {
 public:
     void discounted_rollback(int step) {}
+    double value() const { return 0.0; }
 };
 
 TimeSlice max(const TimeSlice& s1, const TimeSlice& s2) { return TimeSlice(); }
@@ -54,144 +55,144 @@ public:
 };
 
 // EuropeanVanillaOption.1
-double european_vanilla_option(const Model& model)
+double european_vanilla_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = 1;
-    double s = 1.5;
+double n = 300000.0;
+int expiry_step = 50;
+int side = 1;
+double s = 1.5;
 
-    std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    double payoff = side * n * std::max(s - underlying[expiry_step], 0.0);
-    return payoff;
+std::vector<double> underlying = model.get_underlying_path(expiry_step);
+double payoff = side * n * std::max(s - underlying[expiry_step], 0.0);
+return payoff;
 }
 
 // AmericanVanillaOption.1
-TimeSlice american_vanilla_option(const Model& model)
+TimeSlice american_vanilla_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = 1;
-    double s = 1.5;
+double n = 200000.0;
+int expiry_step = 50;
+int side = 1;
+double s = 1.5;
 
-    TimeSlice option = model.get_const_time_slice(expiry_step, 0.0);
-    for (int i = expiry_step; i >= 0; --i)
-    {
-        TimeSlice u = model.get_underlying_time_slice(expiry_step);
-        TimeSlice payoff = s - u;
-        option = max(payoff, option);
-        option.discounted_rollback(i);
-    }
-    return side * n * option;
+TimeSlice option = model.get_const_time_slice(expiry_step, 0.0);
+for (int i = expiry_step; i >= 0; --i)
+{
+    TimeSlice u = model.get_underlying_time_slice(expiry_step);
+    TimeSlice payoff = s - u;
+    option = max(payoff, option);
+    option.discounted_rollback(i);
+}
+return side * n * option;
 }
 
 // AsianOption.1
-double asian_option(const Model& model)
+double asian_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = -1;
-    double s = 1.5;
+double n = 20000.0;
+int expiry_step = 50;
+int side = -1;
+double s = 1.5;
 
-    std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    double avg = 0.0;
-    for (int i = 0; i < expiry_step; ++i)
-    {
-        avg += underlying[i];
-    }
-    avg /= expiry_step;
+std::vector<double> underlying = model.get_underlying_path(expiry_step);
+double avg = 0.0;
+for (int i = 0; i < expiry_step; ++i)
+{
+    avg += underlying[i];
+}
+avg /= expiry_step;
 
-    double payoff = side * n * std::max(avg - s, 0.0);
-    return payoff;
+double payoff = side * n * std::max(avg - s, 0.0);
+return payoff;
 }
 
 // LookbackOption.1
-double lookback_option(const Model& model)
+double lookback_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = 1;
-    double s = 1.5;
+double n = 150000.0;
+int expiry_step = 50;
+int side = 1;
+double s = 3.5;
 
-    std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    double m = underlying[0];
-    for (int i = 1; i < expiry_step; ++i)
-    {
-        double u = underlying[i];
-        if (u > m) u = m;
-    }
+std::vector<double> underlying = model.get_underlying_path(expiry_step);
+double m = underlying[0];
+for (int i = 1; i < expiry_step; ++i)
+{
+    double u = underlying[i];
+    if (u > m) u = m;
+}
 
-    double payoff = side * n * std::max(m - s, 0.0);
-    return payoff;
+double payoff = side * n * std::max(m - s, 0.0);
+return payoff;
 }
 
 // FadeInOption
-double fade_in_option(const Model& model)
+double fade_in_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = 1;
-    double s = 1.5;
-    double b = 1.5;
+double n = 50000.0;
+int expiry_step = 50;
+int side = 1;
+double s = 1.5;
+double b = 2.5;
 
-    std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    double mult = 0.0;
-    for (int i = 0; i < expiry_step; ++i)
-    {
-        double u = underlying[i];
-        if (u >= b) mult += 1.0;
-    }
-    mult /= expiry_step;
+std::vector<double> underlying = model.get_underlying_path(expiry_step);
+double mult = 0.0;
+for (int i = 0; i < expiry_step; ++i)
+{
+    double u = underlying[i];
+    if (u >= b) mult += 1.0;
+}
+mult /= expiry_step;
 
-    double payoff = side * mult * n * std::max(underlying[expiry_step] - s, 0.0);
-    return payoff;
+double payoff = side * mult * n * std::max(underlying[expiry_step] - s, 0.0);
+return payoff;
 }
 
 // OneTouchOption.1
-double one_touch_option(const Model& model)
+double one_touch_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = -1;
-    double b = 1.5;
+double n = 300000.0;
+int expiry_step = 50;
+int side = -1;
+double b = 1.5;
 
-    std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    int alive = 1;
-    for (int i = 0; i <= expiry_step; ++i)
-    {
-        double u = underlying[i];
-        if (u >= b) alive = 0;
-    }
-    double payoff = side * n * alive;
-    return payoff;
+std::vector<double> underlying = model.get_underlying_path(expiry_step);
+int alive = 1;
+for (int i = 0; i <= expiry_step; ++i)
+{
+    double u = underlying[i];
+    if (u >= b) alive = 0;
+}
+double payoff = side * n * alive;
+return payoff;
 }
 
 // DoubleNoTouchOption.1
-double double_no_touch_option(const Model& model)
+double double_no_touch_option_1(const Model& model)
 {
-    double n = 100000.0;
-    int expiry_step = 50;
-    int side = -1;
-    double b1 = 1.3;
-    double b2 = 1.5;
+double n = 250000.0;
+int expiry_step = 50;
+int side = -1;
+double b1 = 1.3;
+double b2 = 1.5;
 
-    std::vector<double> underlying = model.get_underlying_path(expiry_step);
-    int alive = 1;
-    for (int i = 0; i <= expiry_step; ++i)
-    {
-        double u = underlying[i];
-        if (u <= b1) alive = 0;
-        if (u >= b2) alive = 0;
-    }
-    double payoff = side * n * alive;
-    return payoff;
+std::vector<double> underlying = model.get_underlying_path(expiry_step);
+int alive = 1;
+for (int i = 0; i <= expiry_step; ++i)
+{
+    double u = underlying[i];
+    if (u <= b1) alive = 0;
+    if (u >= b2) alive = 0;
+}
+double payoff = side * n * alive;
+return payoff;
 }
 
 // ForwardRateAgreement.1
-TimeSlice forward_rate_agreement(const Model& model)
+double forward_rate_agreement_1(const Model& model)
 {
-    double n = 100000.0;
-    int start_step = 50;
+    double n = 500000.0;
+    int start_step = 45;
     int end_step = 50;
     int side = 1;
     double f = 0.05;
@@ -200,8 +201,10 @@ TimeSlice forward_rate_agreement(const Model& model)
     TimeSlice s = model.get_const_time_slice(start_step, 0.0);
     TimeSlice e = model.get_const_time_slice(end_step, 0.0);
     e.discounted_rollback(start_step);
-    TimeSlice p = s - e * (1 + dcf * f);
-    return (side * n) * p;
+    TimeSlice time_slice = s - e * (1 + dcf * f);
+    time_slice.discounted_rollback(0);
+    double v = time_slice.value();
+    return (side * n) * v;
 }
 
 int main()
@@ -211,12 +214,12 @@ int main()
     
     Model model;
     
-    european_vanilla_option(model);
-    american_vanilla_option(model);
-    asian_option(model);
-    lookback_option(model);
-    fade_in_option(model);
-    one_touch_option(model);
-    double_no_touch_option(model);
-    forward_rate_agreement(model);
+    european_vanilla_option_1(model);
+    american_vanilla_option_1(model);
+    asian_option_1(model);
+    lookback_option_1(model);
+    fade_in_option_1(model);
+    one_touch_option_1(model);
+    double_no_touch_option_1(model);
+    forward_rate_agreement_1(model);
 }
