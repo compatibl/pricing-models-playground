@@ -26,6 +26,7 @@ class TimeSlice
 public:
     void discounted_rollback(int step) {}
     double value() const { return 0.0; }
+    TimeSlice operator-() const { return TimeSlice(); }
 };
 
 TimeSlice max(const TimeSlice& s1, const TimeSlice& s2) { return TimeSlice(); }
@@ -45,9 +46,10 @@ TimeSlice operator*(const TimeSlice& s1, double s2) { return TimeSlice(); }
 class Model
 {
 public:
-    TimeSlice get_underlying_time_slice(int step) const { return TimeSlice(); }
+    double get_dcf(std::string basis, int start_step, int end_step) const { return 0; }
+    TimeSlice get_underlying_time_slice(std::string, int step) const { return TimeSlice(); }
     TimeSlice get_const_time_slice(int step, double value) const { return TimeSlice(); }
-    std::vector<double> get_underlying_path(int step) const { return std::vector<double>(step + 1, 1.0); }
+    std::vector<double> get_underlying_path(std::string symbol, int step) const { return std::vector<double>(step + 1, 1.0); }
     TimeSlice operator+(const TimeSlice& other) const { return TimeSlice(); }
     TimeSlice operator-(const TimeSlice& other) const { return TimeSlice(); }
     TimeSlice operator-(double other) const { return TimeSlice(); }
@@ -62,7 +64,7 @@ int expiry_step = 50;
 int side = 1;
 double s = 1.5;
 
-std::vector<double> underlying = model.get_underlying_path(expiry_step);
+std::vector<double> underlying = model.get_underlying_path("SPX", expiry_step);
 double payoff = side * n * std::max(s - underlying[expiry_step], 0.0);
 return payoff;
 }
@@ -78,7 +80,7 @@ double s = 1.5;
 TimeSlice option = model.get_const_time_slice(expiry_step, 0.0);
 for (int i = expiry_step; i >= 0; --i)
 {
-    TimeSlice u = model.get_underlying_time_slice(expiry_step);
+    TimeSlice u = model.get_underlying_time_slice("SPX", expiry_step);
     TimeSlice payoff = s - u;
     option = max(payoff, option);
     option.discounted_rollback(i);
@@ -94,7 +96,7 @@ int expiry_step = 50;
 int side = -1;
 double s = 1.5;
 
-std::vector<double> underlying = model.get_underlying_path(expiry_step);
+std::vector<double> underlying = model.get_underlying_path("SPX", expiry_step);
 double avg = 0.0;
 for (int i = 0; i < expiry_step; ++i)
 {
@@ -114,12 +116,12 @@ int expiry_step = 50;
 int side = 1;
 double s = 3.5;
 
-std::vector<double> underlying = model.get_underlying_path(expiry_step);
+std::vector<double> underlying = model.get_underlying_path("SPX", expiry_step);
 double m = underlying[0];
 for (int i = 1; i < expiry_step; ++i)
 {
     double u = underlying[i];
-    if (u > m) u = m;
+    if (u > m) m = u;
 }
 
 double payoff = side * n * std::max(m - s, 0.0);
@@ -135,7 +137,7 @@ int side = 1;
 double s = 1.5;
 double b = 2.5;
 
-std::vector<double> underlying = model.get_underlying_path(expiry_step);
+std::vector<double> underlying = model.get_underlying_path("SPX", expiry_step);
 double mult = 0.0;
 for (int i = 0; i < expiry_step; ++i)
 {
@@ -156,7 +158,7 @@ int expiry_step = 50;
 int side = -1;
 double b = 1.5;
 
-std::vector<double> underlying = model.get_underlying_path(expiry_step);
+std::vector<double> underlying = model.get_underlying_path("SPX", expiry_step);
 int alive = 1;
 for (int i = 0; i <= expiry_step; ++i)
 {
@@ -176,7 +178,7 @@ int side = -1;
 double b1 = 1.3;
 double b2 = 1.5;
 
-std::vector<double> underlying = model.get_underlying_path(expiry_step);
+std::vector<double> underlying = model.get_underlying_path("SPX", expiry_step);
 int alive = 1;
 for (int i = 0; i <= expiry_step; ++i)
 {
@@ -191,20 +193,75 @@ return payoff;
 // ForwardRateAgreement.1
 double forward_rate_agreement_1(const Model& model)
 {
-    double n = 500000.0;
-    int start_step = 45;
-    int end_step = 50;
-    int side = 1;
-    double f = 0.05;
-    double dcf = 0.25;
+double n = 500000.0;
+int start_step = 48;
+int end_step = 60;
+int side = 1;
+double f = 0.05;
 
-    TimeSlice s = model.get_const_time_slice(start_step, 0.0);
-    TimeSlice e = model.get_const_time_slice(end_step, 0.0);
-    e.discounted_rollback(start_step);
-    TimeSlice time_slice = s - e * (1 + dcf * f);
-    time_slice.discounted_rollback(0);
-    double v = time_slice.value();
-    return (side * n) * v;
+double dcf = model.get_dcf("ACT/365", start_step, end_step);
+TimeSlice s = model.get_const_time_slice(start_step, 1.0);
+TimeSlice e = model.get_const_time_slice(end_step, 1.0);
+e.discounted_rollback(start_step);
+TimeSlice time_slice = s - e * (1 + dcf * f);
+time_slice.discounted_rollback(0);
+double v = time_slice.value();
+return (side * n) * v;
+}
+
+// NonCallableFixedForFloatingSwap.1
+double non_callable_fixed_for_floating_swap(const Model& model)
+{
+double n = 1200000.0;
+int start_step = 0;
+int end_step = 60;
+int freq_step = 6;
+int side = -1;
+double f = 0.03;
+double s = 0.002;
+
+TimeSlice result = model.get_const_time_slice(end_step, 0.0);
+for (int step = end_step; step >= start_step; step -= freq_step)
+{
+    if (step < end_step) result.discounted_rollback(step);
+
+    double dcf1 = model.get_dcf("30/360", step - freq_step, step);
+    double dcf2 = model.get_dcf("ACT/365", step - freq_step, step);
+    TimeSlice unit = model.get_const_time_slice(step, 1.0);
+        
+    if (step == end_step) result = -unit;
+    if (step == start_step) result = result + unit;
+    if (step > start_step) result = result - (dcf1 * f - dcf2 * s) * unit;
+}
+result.discounted_rollback(0);
+double v = result.value();
+return (side * n) * v;
+}
+
+// NonCallableFixedRateNote.1
+double non_callable_fixed_rate_note(const Model& model)
+{
+double n = 750000.0;
+int start_step = 0;
+int end_step = 60;
+int freq_step = 6;
+int side = -1;
+double f = 0.02;
+
+TimeSlice result = model.get_const_time_slice(end_step, 0.0);
+for (int step = end_step; step > start_step; step -= freq_step)
+{
+    if (step < end_step) result.discounted_rollback(step);
+
+    double dcf = model.get_dcf("30/360", step - freq_step, step);
+    TimeSlice unit = model.get_const_time_slice(step, 1.0);
+
+    if (step == end_step) result = unit;
+    result = result + (dcf * f) * unit;
+}
+result.discounted_rollback(0);
+double v = result.value();
+return (side * n) * v;
 }
 
 int main()
@@ -222,4 +279,6 @@ int main()
     one_touch_option_1(model);
     double_no_touch_option_1(model);
     forward_rate_agreement_1(model);
+    non_callable_fixed_for_floating_swap(model);
+    non_callable_fixed_rate_note(model);
 }
