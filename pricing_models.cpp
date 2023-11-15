@@ -72,20 +72,20 @@ return payoff;
 // AmericanVanillaOption.1
 TimeSlice american_vanilla_option_1(const Model& model)
 {
-double n = 200000.0;
-int expiry_step = 50;
-int side = 1;
-double s = 1.5;
+    double n = 200000.0;
+    int expiry_step = 50;
+    int side = 1;
+    double s = 1.5;
 
-TimeSlice option = model.get_const_time_slice(expiry_step, 0.0);
-for (int i = expiry_step; i >= 0; --i)
-{
-    TimeSlice u = model.get_underlying_time_slice("SPX", expiry_step);
-    TimeSlice payoff = s - u;
-    option = max(payoff, option);
-    option.discounted_rollback(i);
-}
-return side * n * option;
+    TimeSlice option = model.get_const_time_slice(expiry_step, 0.0);
+    for (int i = expiry_step; i >= 0; --i)
+    {
+        TimeSlice u = model.get_underlying_time_slice(i);
+        TimeSlice payoff = s - u;
+        option.discounted_rollback(i);
+        option = max(payoff, option);
+    }
+    return side * n * option;
 }
 
 // AsianOption.1
